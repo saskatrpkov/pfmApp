@@ -21,6 +21,7 @@ import { FormsModule } from '@angular/forms';
 import { MatDrawer, MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { ViewEncapsulation } from '@angular/core';
+import { TransactionDetailsDialogComponent } from '../../dialogs/transaction-details-dialog/transaction-details-dialog.component';
 @Component({
   selector: 'app-transaction-list',
   standalone: true,
@@ -55,7 +56,8 @@ import { ViewEncapsulation } from '@angular/core';
 })
 export class TransactionListComponent implements OnInit {
   @ViewChild('filterDrawer') filterDrawer!: MatDrawer;
-  
+  @ViewChild(ChartsOverviewComponent) chartsOverview!: ChartsOverviewComponent;
+
   transactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
   transactionsCategories: Category[] = [];
@@ -66,17 +68,39 @@ export class TransactionListComponent implements OnInit {
   fromDate: Date | null = null;
   toDate: Date | null = null;
 
+  pendingKind: string = 'All';
+  pendingFromDate: Date | null = null;
+  pendingToDate: Date | null = null;
+
+
   isMultiSelectMode = false;
   expandedTransactionId: string | null = null;
   showChartView: boolean = false;
   drawerOpened = false;
 
-  pendingKind: string = 'All';
-  pendingFromDate: Date | null = null;
-  pendingToDate: Date | null = null;
-
   currentPage = 1;
   transactionsPerPage = 10;
+
+  cards = [
+    {
+      id: 1,
+      name: 'Trpkov Aleksandra',
+      number: '4642 3489 9867 7632',
+      valid: '11/15',
+      expiry: '03/27',
+      bgImage: 'https://i.imgur.com/kGkSg1v.png',
+      logo: 'https://i.imgur.com/bbPHJVe.png'
+    },
+    {
+      id: 2,
+      name: 'Trpkov Aleksandra',
+      number: '4642 3489 9867 7632',
+      valid: '11/15',
+      expiry: '03/27',
+      bgImage: 'https://i.imgur.com/Zi6v09P.png',
+      logo: 'https://i.imgur.com/bbPHJVe.png'
+    }
+  ];
 
   constructor(
     private transactionService: TransactionService,
@@ -96,10 +120,11 @@ export class TransactionListComponent implements OnInit {
     //   this.applyAllFilters();
     // });
     this.kinds = [
-      'Deposit', 'Withdrawal', 'Payment', 'Fee', 'Interest Credit',
-      'Reversal', 'Adjustment', 'Loan Disbursement', 'Loan Repayment',
-      'FX Exchange', 'Account Opening', 'Account Closing', 'Split Payment', 'Salary'
+      'dep', 'wdw', 'pmt', 'fee', 'inc',
+      'rev', 'adj', 'lnd', 'lnr',
+      'fcx', 'aop', 'acl', 'spl', 'sal'
     ];
+
     
     this.categoryService.getCategories().subscribe((categories) => {
       this.transactionsCategories = categories;
@@ -114,7 +139,11 @@ export class TransactionListComponent implements OnInit {
     const kinds = this.selectedKind !== 'All' ? [this.selectedKind] : [];
     const startDateStr = this.fromDate?.toISOString().split('T')[0];
     const endDateStr = this.toDate?.toISOString().split('T')[0];
-
+    console.log('API filters:', {
+      kind: this.selectedKind,
+      from: this.fromDate,
+      to: this.toDate
+    });
     this.transactionService.getTransactions({
       pageNumber: this.currentPage,
       pageSize: this.transactionsPerPage,
@@ -122,8 +151,8 @@ export class TransactionListComponent implements OnInit {
       startDate: startDateStr,
       endDate: endDateStr
     }).subscribe((res) => {
-      this.transactions = res.items;
-      this.filteredTransactions = res.items; 
+      this.transactions = res.items; 
+      this.filteredTransactions = res.items;
       this.totalItemCount = res.totalCount;
     });
   }
@@ -135,10 +164,10 @@ export class TransactionListComponent implements OnInit {
   // -------------------------
   // FILTERI
   // -------------------------
-  onKindSelected(kind: string): void {
-    this.currentPage = 1;
-    this.pendingKind = kind;
-  }
+  // onKindSelected(kind: string): void {
+  //   this.currentPage = 1;
+  //   this.pendingKind = kind;
+  // }
 
   onDateRangeSelected(range: { from: Date | null; to: Date | null }): void {
     this.currentPage = 1;
@@ -177,17 +206,22 @@ export class TransactionListComponent implements OnInit {
   // }
 
   applyFilters(): void {
-    this.selectedKind = this.pendingKind ?? 'All';
+    this.selectedKind = this.pendingKind;
     this.fromDate = this.pendingFromDate;
     this.toDate = this.pendingToDate;
     this.currentPage = 1;
-    // this.applyAllFilters(); 
-     this.fetchTransactions();
+    this.fetchTransactions();
+    //this.chartsOverview.refreshTrigger++;
   }
 
   onApplyAndClose():void{
     this.applyFilters(); 
     this.closeDrawer();  
+  }
+
+  onClearAndClose():void{
+    this.clearFilters();
+    this.closeDrawer(); 
   }
 
   clearFilters(): void {
@@ -198,7 +232,7 @@ export class TransactionListComponent implements OnInit {
     this.pendingFromDate = null;
     this.pendingToDate = null;
     this.fetchTransactions();
-    // this.applyFilters();
+   // this.chartsOverview.refreshTrigger++;
   } 
   // -------------------------
   // DIALOGI
@@ -218,6 +252,7 @@ export class TransactionListComponent implements OnInit {
         transaction.category = catcode;
         transaction.subcategory = catcode;
         this.transactionService.updateTransactionCategory(transaction.id, { catcode }).subscribe();
+        this.chartsOverview.refreshTrigger++;
       }
     });
   }
@@ -263,6 +298,7 @@ export class TransactionListComponent implements OnInit {
           });
 
           this.isMultiSelectMode = false;
+          this.chartsOverview.refreshTrigger++;
         });
       }
     });
@@ -325,7 +361,8 @@ export class TransactionListComponent implements OnInit {
       setTimeout(() => {
         this.refreshTransactions();
         this.expandedTransactionId = transactionId; 
-        
+        this.chartsOverview.refreshTrigger++;
+
         setTimeout(() => {
           const element = this.elementRef.nativeElement.querySelector(`[data-transaction-id="${transactionId}"]`);
           if (element) {
@@ -342,7 +379,12 @@ export class TransactionListComponent implements OnInit {
      const parent = this.transactionsCategories.find(c => c.code === category.parentCode);
      return parent?.name ?? catcode;
    }
-
+   openTransactionDetailsDialog(transaction: Transaction) {
+  this.dialog.open(TransactionDetailsDialogComponent, {
+    data: transaction,
+    panelClass: 'dialog-container'
+  });
+}
   // refreshTransactions(): void {
   //   this.transactionService.getTransactions().subscribe((data) => {
   //     this.transactions = data.map(t => ({ ...t, selected: false }));

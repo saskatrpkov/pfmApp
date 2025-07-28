@@ -29,36 +29,16 @@ export class ChartsOverviewComponent {
   @Input() transactions: Transaction[] = [];
   @ViewChild(TreemapGraphComponent) treemapComponent?: TreemapGraphComponent;
   @ViewChild(PieChartGraphComponent) pieChartComponent?: PieChartGraphComponent;
-
+  @Input() categories: { code: string; name: string; parentCode?: string |null }[] = [];
   showCards = false;
   selectedChart: string = 'treemap'; // default
   isMobile: boolean = false;
-
+  refreshTrigger: number = 0;
+  
   chartTypes = [
     { value: 'treemap', label: 'Treemap' },
     { value: 'pie', label: 'Pie Chart' },
     { value: 'bar', label: 'Bar Chart' }
-  ];
-
-  cards = [
-    {
-      id: 1,
-      name: 'Trpkov Aleksandra',
-      number: '4642 3489 9867 7632',
-      valid: '11/15',
-      expiry: '03/27',
-      bgImage: 'https://i.imgur.com/kGkSg1v.png',
-      logo: 'https://i.imgur.com/bbPHJVe.png'
-    },
-    {
-      id: 2,
-      name: 'Trpkov Aleksandra',
-      number: '4642 3489 9867 7632',
-      valid: '11/15',
-      expiry: '03/27',
-      bgImage: 'https://i.imgur.com/Zi6v09P.png',
-      logo: 'https://i.imgur.com/bbPHJVe.png'
-    }
   ];
 
   constructor(

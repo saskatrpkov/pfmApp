@@ -9,10 +9,10 @@ import { Category } from '../models/category';
 export class CategoryService {
   constructor(private http: HttpClient) {}
 
-  getCategories(): Observable<any[]> {
-  return this.http.get<any[]>('https://localhost:7138/categories').pipe(
-     map((data) =>
-      data.map((cat) => ({
+  getCategories(): Observable<Category[]> {
+  return this.http.get<{ items: any[] }>('https://localhost:7138/categories').pipe(
+    map((data) =>
+      data.items.map((cat) => ({
         code: cat.code,
         name: cat.name,
         parentCode: cat['parent-code'] || null

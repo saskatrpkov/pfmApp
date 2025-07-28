@@ -1,20 +1,21 @@
 import { Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
 @Component({
   selector: 'app-kind-filter',
   standalone: true,
-  imports: [CommonModule, MatFormFieldModule, MatSelectModule],
+  imports: [CommonModule, FormsModule, MatFormFieldModule, MatSelectModule],
   templateUrl: './kind-filter.component.html',
   styleUrl: './kind-filter.component.scss',
   encapsulation: ViewEncapsulation.None
 })
 export class KindFilterComponent {
-  @Input() kinds: string[] = [];
-  @Input() selectedKind: string = 'All';
-  @Output() kindSelected = new EventEmitter<string>();
+  @Input() kinds: string[] = []; // 'pmt', 'wdw', ...
+  @Input() selectedKind: string = 'All'; // two-way binding iz roditelja
+  @Output() selectedKindChange = new EventEmitter<string>();
 
   kindLabels: { [key: string]: string } = {
     All: 'All',
@@ -38,14 +39,8 @@ export class KindFilterComponent {
     return this.kindLabels[kind] || kind;
   }
 
-  getCodeFromLabel(label: string): string {
-    const entry = Object.entries(this.kindLabels).find(([code, lbl]) => lbl === label);
-    return entry ? entry[0] : label; 
-  }
-
-  onSelectionChange(selectedLabel: string) {
-    const code = this.getCodeFromLabel(selectedLabel);
-    this.kindSelected.emit(code);
+  onSelectionChange(kind: string): void {
+    this.selectedKind = kind;
+    this.selectedKindChange.emit(kind);
   }
 }
-

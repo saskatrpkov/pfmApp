@@ -1,0 +1,13 @@
+<h2 mat-dialog-title>Transaction Details</h2>
+<mat-dialog-content class="details-dialog">
+  <p><strong>Name:</strong> {{ data['beneficiaryName'] }}</p>
+  <p><strong>ID:</strong> {{ data.id }}</p>
+  <p><strong>Amount:</strong> {{ data.amount }} {{ data.currency }}</p>
+  <p><strong>Category:</strong> {{ data.subcategory || data.category }}</p>
+  <p><strong>Kind:</strong> {{ data.kind }}</p>
+  <p><strong>Direction:</strong> {{ data.direction === 'c' ? 'Income' : 'Outcome' }}</p>
+  <p><strong>Date:</strong> {{ data.date | date: 'dd MMM yyyy' }}</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

@@ -1,44 +1,4 @@
 <div class="charts-layout">
-  @if (showCards) {
-    <div class="cards-column">
-      @for (card of cards; track card.id) {
-        <div class="card-box">
-          <img [src]="card.bgImage" class="card-image" />
-          <div class="card-content">
-            <div class="card-row">
-              <div>
-                <p class="card-label">Name</p>
-                <p class="card-value">{{ card.name }}</p>
-              </div>
-              <img [src]="card.logo" class="card-avatar" />
-            </div>
-            <div class="card-row">
-              <div>
-                <p class="card-label">Card Number</p>
-                <p class="card-value">{{ card.number }}</p>
-              </div>
-            </div>
-            <div class="card-row">
-              <div>
-                <p class="card-label">Valid</p>
-                <p class="card-value">{{ card.valid }}</p>
-              </div>
-              <div>
-                <p class="card-label">Expiry</p>
-                <p class="card-value">{{ card.expiry }}</p>
-              </div>
-              <div>
-                <p class="card-label">CVV</p>
-                <p class="card-value">···</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-    </div>
-  }
-
-  <!-- Desna kolona sa grafikonom -->
   <div class="chart-column">
     <!-- Prikaz dugmeta za izbor grafikona samo ako nije mobilni prikaz -->
     @if (!isMobile) {
@@ -61,7 +21,11 @@
       @switch (selectedChart) {
         @case ('treemap') {
           @if (hasDataToDisplay) {
-            <app-treemap-graph [transactions]="transactions" />
+            <app-treemap-graph
+              [transactions]="transactions"
+              [categories]="categories"
+              [refreshTrigger]="refreshTrigger"
+            />
           } @else {
             <div class="empty-state">
               <img src="../../../../assets/group2.png" alt="No data" />
@@ -73,7 +37,7 @@
 
         @case ('pie') {
           @if (hasDataToDisplay) {
-            <app-pie-chart-graph [transactions]="transactions" />
+            <app-pie-chart-graph echarts class="pie-chart" [transactions]="transactions" />
           } @else {
             <div class="empty-state">
               <img src="../../../../assets/group2.png" alt="No data" />

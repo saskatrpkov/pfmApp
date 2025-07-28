@@ -1,4 +1,91 @@
 <mat-drawer-container autosize class="transaction-list-container drawer-container" hasBackdrop="true">
+  <!-- CARDS -->
+  @if (showChartView) {
+      <div class="cards-and-chart-wrapper">
+        <div class="cards-column vertical">
+          @for (card of cards; track card.id) {
+            <div class="card-box">
+              <img [src]="card.bgImage" class="card-image" />
+              <div class="card-content">
+                <div class="card-row">
+                  <div>
+                    <p class="card-label">Name</p>
+                    <p class="card-value">{{ card.name }}</p>
+                  </div>
+                  <img [src]="card.logo" class="card-avatar" />
+                </div>
+                <div class="card-row">
+                  <div>
+                    <p class="card-label">Card Number</p>
+                    <p class="card-value">{{ card.number }}</p>
+                  </div>
+                </div>
+                <div class="card-row">
+                  <div>
+                    <p class="card-label">Valid</p>
+                    <p class="card-value">{{ card.valid }}</p>
+                  </div>
+                  <div>
+                    <p class="card-label">Expiry</p>
+                    <p class="card-value">{{ card.expiry }}</p>
+                  </div>
+                  <div>
+                    <p class="card-label">CVV</p>
+                    <p class="card-value">···</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="chart-column">
+          <app-charts-overview
+            [categories]="transactionsCategories"
+            [transactions]="filteredTransactions"
+            @fadeSlide>
+          </app-charts-overview>
+        </div>
+      </div>
+    } @else {
+      <div class="cards-column">
+        @for (card of cards; track card.id) {
+          <div class="card-box">
+            <img [src]="card.bgImage" class="card-image" />
+            <div class="card-content">
+              <div class="card-row">
+                <div>
+                  <p class="card-label">Name</p>
+                  <p class="card-value">{{ card.name }}</p>
+                </div>
+                <img [src]="card.logo" class="card-avatar" />
+              </div>
+              <div class="card-row">
+                <div>
+                  <p class="card-label">Card Number</p>
+                  <p class="card-value">{{ card.number }}</p>
+                </div>
+              </div>
+              <div class="card-row">
+                <div>
+                  <p class="card-label">Valid</p>
+                  <p class="card-value">{{ card.valid }}</p>
+                </div>
+                <div>
+                  <p class="card-label">Expiry</p>
+                  <p class="card-value">{{ card.expiry }}</p>
+                </div>
+                <div>
+                  <p class="card-label">CVV</p>
+                  <p class="card-value">···</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  
   <!-- FILTER DRAWER -->
   @if (drawerOpened) {
     <div class="overlay-backdrop" (click)="closeDrawer()"></div>
@@ -15,11 +102,12 @@
       <h3>Transaction type:</h3>
       <app-kind-filter class="filter1"
         [kinds]="kinds"
-        [selectedKind]="selectedKind"
-        (kindSelected)="onKindSelected($event)">
+        [(selectedKind)]="pendingKind">
       </app-kind-filter>
       <h3>Period:</h3>
       <app-date-filter
+        [from]="pendingFromDate"
+        [to]="pendingToDate"
         (dateRangeSelected)="onDateRangeSelected($event)">
       </app-date-filter>
     </div>
@@ -27,20 +115,13 @@
     <div class="drawer-actions">
       <div class="filters-footer">
         <button class="btn btn-primary" (click)="onApplyAndClose()">Filter Transactions</button>
-        <button class="btn btn-secondary" (click)="clearFilters()">Clear Filters</button>
+        <button class="btn btn-secondary" (click)="onClearAndClose()">Clear Filters</button>
       </div>
     </div>
   </mat-drawer>
 
   <!-- GLAVNI SADRŽAJ -->
   <div class="drawer-content">
-    @if (showChartView) {
-      <app-charts-overview
-        [transactions]="filteredTransactions"
-        @fadeSlide>
-      </app-charts-overview>
-    }
-
     <div class="header-row">
       <h2>Transaction History</h2>
       <mat-slide-toggle
@@ -98,14 +179,14 @@
       }
 
       <ng-container matColumnDef="beneficiaryName">
-        <th mat-header-cell *matHeaderCellDef>Name</th>
-        <td mat-cell *matCellDef="let t">
+        <th mat-header-cell *matHeaderCellDef class="col-beneficiaryName">Name</th>
+        <td mat-cell *matCellDef="let t" class="col-beneficiaryName">
           <div class="name-cell">
             @if (t.avatarKey) {
               <img [src]="'assets/' + t.avatarKey" class="avatar" />
             }
             <div class="name-info">
-              <span class="benName">{{ t.beneficiaryName }}</span>
+              <span class="benName clickable" (click)="openTransactionDetailsDialog(t)">{{ t.beneficiaryName }}</span>
               <div class="id-badge">ID: {{ t.id }}</div>
             </div>
           </div>
@@ -113,12 +194,12 @@
       </ng-container>
 
       <ng-container matColumnDef="kind">
-        <th mat-header-cell *matHeaderCellDef>Type</th>
-        <td mat-cell *matCellDef="let t" class="kindCell">{{ t.kind }}</td>
+        <th mat-header-cell *matHeaderCellDef class="col-kind">Type</th>
+        <td mat-cell *matCellDef="let t" class="col-kind kindCell">{{ t.kind }}</td>
       </ng-container>
 
       <ng-container matColumnDef="direction">
-        <th mat-header-cell *matHeaderCellDef>
+        <th mat-header-cell *matHeaderCellDef class="col-direction">
           <div class="status-header">
             Status
             <div class="status-icons">
@@ -127,7 +208,7 @@
             </div>
           </div>
         </th>
-        <td mat-cell *matCellDef="let t">
+        <td mat-cell *matCellDef="let t" class="col-direction">
           <div class="status-indicator">
             <span class="dot" [ngClass]="t.direction === 'c' ? 'dot-income' : 'dot-outcome'"></span>
             <span>{{ t.direction === 'c' ? 'Income' : 'Outcome' }}</span>
@@ -136,13 +217,13 @@
       </ng-container>
 
       <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef>Date</th>
-        <td mat-cell *matCellDef="let t" class="dateCell">{{ t.date | date: 'dd MMM yyyy' }}</td>
+        <th mat-header-cell *matHeaderCellDef class="col-date">Date</th>
+        <td mat-cell *matCellDef="let t" class="col-date dateCell">{{ t.date | date: 'dd MMM yyyy' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="amount">
-        <th mat-header-cell *matHeaderCellDef>Amount</th>
-        <td mat-cell *matCellDef="let t">
+        <th mat-header-cell *matHeaderCellDef class="col-amount">Amount</th>
+        <td mat-cell *matCellDef="let t" class="col-amount">
           <span [ngClass]="t.direction === 'd' ? 'negative-amount' : 'positive-amount'">
             {{ t.direction === 'd' ? '-' : '+' }}{{ t.amount | number: '1.2-2' }} {{ t.currency }}
           </span>
@@ -150,21 +231,21 @@
       </ng-container>
 
       <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef>Category</th>
-        <td mat-cell *matCellDef="let t">
+        <th mat-header-cell *matHeaderCellDef class="col-category">Category</th>
+        <td mat-cell *matCellDef="let t" class="col-category">
           @if (!t.category) {
             <button class="btn btn-secondary" (click)="openCategorizeDialog(t)">+ Add category</button>
           } @else {
-            <button class="btn btn-primary" (click)="openCategorizeDialog(t)">
-              {{ getMainCategoryLabel(t.category || t.subcategory) }}
+            <button class="btn btn-primary btn-category" (click)="openCategorizeDialog(t)">
+               {{ getMainCategoryLabel(t.subcategory || t.category) }}
             </button>
           }
         </td>
       </ng-container>
 
       <ng-container matColumnDef="split">
-        <th mat-header-cell *matHeaderCellDef>Split</th>
-        <td mat-cell *matCellDef="let t">
+        <th mat-header-cell *matHeaderCellDef class="col-split">Split</th>
+        <td mat-cell *matCellDef="let t" class="col-split">
           @if (t.isSplit) {
             <div class="split-cell">
               <mat-icon
@@ -197,8 +278,8 @@
                       <mat-icon class="split-dot">chevron_right</mat-icon>
                       <div class="split-info">
                         <p>
-                          <strong>{{ getSplitLabel(split.catcode).labelType }}:</strong>
-                          {{ getSplitLabel(split.catcode).label }}
+                          <strong>{{ getSplitLabel(split['cat-code']).labelType }}:</strong>
+                          {{ getSplitLabel(split['cat-code']).label }}
                         </p>
                         <p>
                           <strong>Amount:</strong> {{ split.amount | number: '1.2-2' }} {{ row.currency }}

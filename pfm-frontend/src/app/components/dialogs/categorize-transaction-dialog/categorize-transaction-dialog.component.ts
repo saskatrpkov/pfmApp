@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit,ViewEncapsulation } from '@angular/core';
+import { Component, Inject, OnInit, ViewEncapsulation } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { CategoryService } from '../../../services/category.service';
 import { Category } from '../../../models/category';
@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+
 @Component({
   selector: 'app-categorize-transaction-dialog',
   standalone: true,
@@ -37,18 +38,33 @@ export class CategorizeTransactionDialogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.categoryService.getCategories().subscribe((categories) => {
-      this.allCategories = categories;
-      this.parentCategories = categories.filter(c => c.parentCode === null);
+  this.categoryService.getCategories().subscribe((categories) => {
+    this.allCategories = categories;
+    this.parentCategories = categories.filter(c => c.parentCode === null);
 
-      const selectedCatCode = this.data.transaction.category;
-      const selectedSubCode = this.data.transaction.subcategory;
+    const selectedCatCode = this.data.transaction.category;
 
-      this.selectedCategory = this.allCategories.find(c => c.code === selectedCatCode) || null;
-      this.selectedSubcategory = this.allCategories.find(c => c.code === selectedSubCode) || null;
-      this.onCategoryChange();
-    });
-  }
+    const selected = this.allCategories.find(c => c.code === selectedCatCode);
+    if (!selected) {
+      this.selectedCategory = null;
+      this.selectedSubcategory = null;
+      return;
+    }
+
+    if (selected.parentCode === null) {
+      // Glavna kategorija
+      this.selectedCategory = selected;
+      this.selectedSubcategory = null;
+    } else {
+      // Podkategorija
+      this.selectedSubcategory = selected;
+      this.selectedCategory = this.allCategories.find(c => c.code === selected.parentCode) || null;
+    }
+
+    this.onCategoryChange();
+  });
+}
+
 
   onCategoryChange(): void {
     if (this.selectedCategory) {
@@ -56,35 +72,26 @@ export class CategorizeTransactionDialogComponent implements OnInit {
         c => c.parentCode === this.selectedCategory!.code
       );
 
-      // Ako prethodno selektovana podkategorija više ne postoji, resetuj je
+      // Resetuj ako prethodno selektovana podkategorija više ne postoji
       if (!this.subcategories.find(sc => sc.code === this.selectedSubcategory?.code)) {
         this.selectedSubcategory = null;
       }
-      } else {
-        this.subcategories = [];
-        this.selectedSubcategory = null;
-      }
+    } else {
+      this.subcategories = [];
+      this.selectedSubcategory = null;
+    }
   }
 
   onCancel(): void {
     this.dialogRef.close();
   }
 
-  // onApply(): void {
-  //   this.dialogRef.close({
-  //     category: this.selectedCategory?.name || '',
-  //     subcategory: this.selectedSubcategory
-  //   });
-  // }
-
-   onApply(): void {
+  onApply(): void {
     let catcode = '';
 
     if (this.selectedSubcategory) {
-      // Ako je izabrana podkategorija, nju šaljemo
       catcode = this.selectedSubcategory.code;
     } else if (this.selectedCategory) {
-      // Ako nije, šaljemo kategoriju
       catcode = this.selectedCategory.code;
     }
 

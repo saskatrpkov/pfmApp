@@ -67,7 +67,7 @@ export class TransactionService {
           //isSplit: item.isSplit ?? false,
           splits: item.splits ?? [],
           category: item['cat-code'] ?? '',
-          subcategory: '',
+          subcategory: item['cat-code'] ?? '',
           selected: false
         })),
         totalCount: data['total-count']

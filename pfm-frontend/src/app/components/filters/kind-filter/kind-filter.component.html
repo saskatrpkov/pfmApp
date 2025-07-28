@@ -1,8 +1,7 @@
 <mat-form-field appearance="fill" class="styled-field full-width">
   <mat-label>Filter by transaction type:</mat-label>
-
   <mat-select
-    [value]="selectedKind"
+    [(ngModel)]="selectedKind"
     (selectionChange)="onSelectionChange($event.value)"
     panelClass="category-select-panel">
     <mat-option class="category-select-option" value="All">All</mat-option>

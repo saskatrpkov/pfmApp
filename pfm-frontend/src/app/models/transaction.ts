@@ -10,7 +10,7 @@ export interface Transaction {
   category: string;
   subcategory?: string;
   splits?: {
-    catcode: string;
+    ['cat-code']: string;
     amount: number;
   }[];
   selected?: boolean;
