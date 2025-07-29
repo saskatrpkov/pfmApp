@@ -1,11 +1,82 @@
-.details-dialog {
-  p {
-    margin: 8px 0;
-    font-size: 14px;
-    color: #ccc;
+@use '../../../../styles/variables.scss' as *;
 
+.details-dialog {
+  background-color: transparent;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: $text-color;
+  align-items: start;
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    color: $text-color;
+    align-items: start;
     strong {
-      color: #fff;
+      color: rgb(0, 0, 0);
     }
   }
+}
+
+::ng-deep .dialog-container {
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(16px);
+  border-radius: 20px;
+  color: rgb(0, 0, 0);
+  padding: 24px;
+  max-width: 90vw;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: white;
+  }
+
+  .mat-dialog-actions {
+    padding-top: 16px;
+
+    button {
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-weight: 600;
+      font-size: 14px;
+      background-color: $primary-color;
+      color: white;
+
+      &:hover {
+        background-color: lighten($primary-color, 5%);
+      }
+    }
+  }
+}
+.name{
+    color: black !important;
+    margin-left: 5px;
+}
+.id{
+    color: black !important;
+    margin-left: 5px;
+}
+.category{
+    color: black !important;
+    margin-left: 5px;
+}
+.date{
+    color: black !important;
+    margin-left: 5px;
+}
+.amount{
+    color: black !important;
+    margin-left: 5px;
+}
+.direction{
+    color: black !important;
+    margin-left: 5px;
+}
+.kind{
+    color: black !important;
+    margin-left: 5px;
 }

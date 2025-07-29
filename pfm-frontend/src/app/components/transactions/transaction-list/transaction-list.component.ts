@@ -81,6 +81,9 @@ export class TransactionListComponent implements OnInit {
   currentPage = 1;
   transactionsPerPage = 10;
 
+  searchText: string = '';
+  isSearchMode: boolean = false;
+
   cards = [
     {
       id: 1,
@@ -145,16 +148,19 @@ export class TransactionListComponent implements OnInit {
       to: this.toDate
     });
     this.transactionService.getTransactions({
-      pageNumber: this.currentPage,
-      pageSize: this.transactionsPerPage,
-      kinds,
-      startDate: startDateStr,
-      endDate: endDateStr
+    pageNumber: this.currentPage,
+    pageSize: this.transactionsPerPage,
+    kinds,
+    startDate: startDateStr,
+    endDate: endDateStr
     }).subscribe((res) => {
       this.transactions = res.items; 
-      this.filteredTransactions = res.items;
       this.totalItemCount = res.totalCount;
-    });
+
+      if (!this.isSearchMode) {
+        this.filteredTransactions = []; // clean up in case of old search
+      }
+   });
   }
 
   refreshTransactions(): void {
@@ -168,6 +174,23 @@ export class TransactionListComponent implements OnInit {
   //   this.currentPage = 1;
   //   this.pendingKind = kind;
   // }
+
+    onSearchChange(): void {
+  const text = this.searchText.toLowerCase().trim();
+  this.isSearchMode = !!text;
+
+  if (this.isSearchMode) {
+    this.filteredTransactions = this.transactions.filter(t =>
+      t['beneficiaryName'].toLowerCase().includes(text)
+    );
+    this.totalItemCount = this.filteredTransactions.length;
+    this.currentPage = 1;
+  } else {
+    this.fetchTransactions(); // resetuj na backend + paginaciju
+  }
+}
+
+
 
   onDateRangeSelected(range: { from: Date | null; to: Date | null }): void {
     this.currentPage = 1;
@@ -211,7 +234,6 @@ export class TransactionListComponent implements OnInit {
     this.toDate = this.pendingToDate;
     this.currentPage = 1;
     this.fetchTransactions();
-    //this.chartsOverview.refreshTrigger++;
   }
 
   onApplyAndClose():void{
@@ -232,7 +254,6 @@ export class TransactionListComponent implements OnInit {
     this.pendingFromDate = null;
     this.pendingToDate = null;
     this.fetchTransactions();
-   // this.chartsOverview.refreshTrigger++;
   } 
   // -------------------------
   // DIALOGI
@@ -252,14 +273,17 @@ export class TransactionListComponent implements OnInit {
         transaction.category = catcode;
         transaction.subcategory = catcode;
         this.transactionService.updateTransactionCategory(transaction.id, { catcode }).subscribe();
-        this.chartsOverview.refreshTrigger++;
+        if (this.chartsOverview) {
+          this.chartsOverview.refreshTrigger++;
+        }
       }
     });
   }
 
   //MULTI KATEGORIZACIJA
   openMultiCategorizationDialog(): void {
-    const selectedTransactions = this.filteredTransactions.filter(t => t.selected);
+    const source = this.isSearchMode ? this.filteredTransactions : this.transactions;
+    const selectedTransactions = source.filter(t => t.selected);
     const dialogRef = this.dialog.open(CategorizeMultipleTransactionsDialogComponent, {
       width: '90vw',
       maxWidth: '400px',
@@ -273,24 +297,16 @@ export class TransactionListComponent implements OnInit {
       if (result) {
         const catcode = result.catcode;
         const updateRequests = selectedTransactions.map(t =>
-          // this.transactionService.updateTransactionCategory(t.id, {
-          //   category: result.category,
-          //   subcategory: result.subcategory || ''
-          // })
            this.transactionService.updateTransactionCategory(t.id, { catcode })
         );
 
         forkJoin(updateRequests).subscribe(() => {
           selectedTransactions.forEach(t => {
-            // t.category = result.category;
-            // t.subcategory = result.subcategory || '';
             const category = this.transactionsCategories.find(c => c.code === catcode);
             if (category?.parentCode) {
-              // Ako je subkategorija (ima parentCode), postavi i category i subcategory
               t.category = category.parentCode;
               t.subcategory = category.code;
             } else {
-              // Ako je glavna kategorija, subcategory je prazno
               t.category = catcode;
               t.subcategory = '';
             }
@@ -298,7 +314,9 @@ export class TransactionListComponent implements OnInit {
           });
 
           this.isMultiSelectMode = false;
-          this.chartsOverview.refreshTrigger++;
+          if (this.chartsOverview) {
+            this.chartsOverview.refreshTrigger++;
+          }
         });
       }
     });
@@ -326,16 +344,19 @@ export class TransactionListComponent implements OnInit {
   // -------------------------
   toggleMultiSelect(): void {
     this.isMultiSelectMode = true;
-    this.filteredTransactions.forEach(t => t.selected = false);
+    const source = this.isSearchMode ? this.filteredTransactions : this.transactions;
+    source.forEach(t => t.selected = false);
   }
 
   cancelMultiSelect(): void {
     this.isMultiSelectMode = false;
-    this.filteredTransactions.forEach(t => t.selected = false);
+    const source = this.isSearchMode ? this.filteredTransactions : this.transactions;
+    source.forEach(t => t.selected = false);
   }
 
   hasSelectedTransactions(): boolean {
-    return this.filteredTransactions.some(t => t.selected);
+    const source = this.isSearchMode ? this.filteredTransactions : this.transactions;
+    return source.some(t => t.selected);
   }
 
   // -------------------------
@@ -361,7 +382,9 @@ export class TransactionListComponent implements OnInit {
       setTimeout(() => {
         this.refreshTransactions();
         this.expandedTransactionId = transactionId; 
-        this.chartsOverview.refreshTrigger++;
+        if (this.chartsOverview) {
+          this.chartsOverview.refreshTrigger++;
+        }
 
         setTimeout(() => {
           const element = this.elementRef.nativeElement.querySelector(`[data-transaction-id="${transactionId}"]`);
@@ -380,11 +403,16 @@ export class TransactionListComponent implements OnInit {
      return parent?.name ?? catcode;
    }
    openTransactionDetailsDialog(transaction: Transaction) {
-  this.dialog.open(TransactionDetailsDialogComponent, {
-    data: transaction,
-    panelClass: 'dialog-container'
-  });
-}
+    if (window.innerWidth > 768) return; 
+
+    this.dialog.open(TransactionDetailsDialogComponent, {
+      data: {
+        transaction,
+        categories: this.transactionsCategories 
+      },
+      panelClass: 'dialog-container'
+    });
+  }
   // refreshTransactions(): void {
   //   this.transactionService.getTransactions().subscribe((data) => {
   //     this.transactions = data.map(t => ({ ...t, selected: false }));
@@ -396,22 +424,32 @@ export class TransactionListComponent implements OnInit {
   // PAGINACIJA
   // -------------------------
   get paginatedTransactions(): Transaction[] {
-    // const start = (this.currentPage - 1) * this.transactionsPerPage;
-    // return this.filteredTransactions.slice(start, start + this.transactionsPerPage);
-    return this.transactions;
+    const start = (this.currentPage - 1) * this.transactionsPerPage;
+
+    if (this.isSearchMode) {
+      return this.filteredTransactions.slice(start, start + this.transactionsPerPage);
+    }
+
+    return this.transactions; // backend je već poslao pravu stranicu
   }
 
+
   get totalPages(): number {
-    //return Math.ceil(this.filteredTransactions.length / this.transactionsPerPage);
-    return Math.ceil(this.totalItemCount / this.transactionsPerPage);
+    const count = this.isSearchMode ? this.filteredTransactions.length : this.totalItemCount;
+    return Math.ceil(count / this.transactionsPerPage);
   }
+
 
   changePage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.fetchTransactions();
+
+      if (!this.isSearchMode) {
+        this.fetchTransactions(); // samo kada nisi u local-search režimu
+      }
     }
   }
+
 
   get visiblePageNumbers(): (number | '...')[] {
     const total = this.totalPages;

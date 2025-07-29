@@ -1,12 +1,12 @@
 <h2 mat-dialog-title>Transaction Details</h2>
 <mat-dialog-content class="details-dialog">
-  <p><strong>Name:</strong> {{ data['beneficiaryName'] }}</p>
-  <p><strong>ID:</strong> {{ data.id }}</p>
-  <p><strong>Amount:</strong> {{ data.amount }} {{ data.currency }}</p>
-  <p><strong>Category:</strong> {{ data.subcategory || data.category }}</p>
-  <p><strong>Kind:</strong> {{ data.kind }}</p>
-  <p><strong>Direction:</strong> {{ data.direction === 'c' ? 'Income' : 'Outcome' }}</p>
-  <p><strong>Date:</strong> {{ data.date | date: 'dd MMM yyyy' }}</p>
+  <p><strong>Name:</strong> <span class="name">{{ data.transaction['beneficiaryName'] }}</span>
+  <p><strong>ID:</strong> <span class="id">{{ data.transaction.id }}</span>
+  <p><strong>Amount:</strong> <span class="amount">{{ data.transaction.amount }} {{ data.transaction.currency }}</span>
+  <p><strong>Subcategory:</strong> <span class="category">{{getCategoryLabel(data.transaction.category)}}</span>
+  <p><strong>Type:</strong> <span class="kind">{{ data.transaction.kind }}</span>
+  <p><strong>Status:</strong> <span class="direction">{{ data.transaction.direction === 'c' ? 'Income' : 'Outcome' }}</span>
+  <p><strong>Date:</strong> <span class="date">{{ data.transaction.date | date: 'dd MMM yyyy' }}</span> 
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Close</button>

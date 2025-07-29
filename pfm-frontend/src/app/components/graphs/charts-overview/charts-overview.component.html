@@ -37,7 +37,10 @@
 
         @case ('pie') {
           @if (hasDataToDisplay) {
-            <app-pie-chart-graph echarts class="pie-chart" [transactions]="transactions" />
+            <app-pie-chart-graph echarts class="pie-chart" 
+            [categories]="categories" 
+            [transactions]="transactions" 
+            [refreshTrigger]="refreshTrigger"/>
           } @else {
             <div class="empty-state">
               <img src="../../../../assets/group2.png" alt="No data" />

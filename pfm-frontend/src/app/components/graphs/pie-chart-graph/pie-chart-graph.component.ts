@@ -14,27 +14,40 @@ import type { ECharts } from 'echarts/core';
 })
 export class PieChartGraphComponent {
   @Input() transactions: Transaction[] = [];
+  @Input() categories: { code: string; name: string; parentCode?: string | null }[] = [];
   public echartsInstance?: ECharts;
   public chartOptions: EChartsOption = {};
   private currentCategory: string | null = null;
+  @Input() refreshTrigger: number = 0;
 
   constructor(private cdr: ChangeDetectorRef) {}
 
+  private getCategoryNameFromCode(code: string): string {
+  const found = this.categories.find(c => c.code === code);
+  if (!found) return code;
+  if (!found.parentCode) return found.name;
+
+  const parent = this.categories.find(c => c.code === found.parentCode);
+  return parent?.name || code;
+}
+
   onChartInit(ec: ECharts) {
-    this.echartsInstance = ec;
+  this.echartsInstance = ec;
 
     ec.on('legendselectchanged', (params: any) => {
-      if (!params?.name) return;
+    if (params.name) {
       this.currentCategory = params.name;
       this.generateChart();
-    });
-  }
+    }
+  });
+}
+
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['transactions']) {
-      this.generateChart();
-    }
+  if ((changes['transactions'] || changes['categories'] || changes['refreshTrigger']) && this.transactions.length && this.categories.length) {
+    this.generateChart();
   }
+}
 
   generateChart(): void {
     const isMobile = window.innerWidth <= 768;
@@ -42,12 +55,12 @@ export class PieChartGraphComponent {
     if (!this.currentCategory) {
       const categoryMap = new Map<string, number>();
       for (const tx of this.transactions) {
-        if (!tx.category || tx.direction !== 'd') continue;
+        if (!tx.category) continue;
         categoryMap.set(tx.category, (categoryMap.get(tx.category) || 0) + tx.amount);
       }
 
-      const data = Array.from(categoryMap.entries()).map(([name, value]) => ({
-        name,
+      const data = Array.from(categoryMap.entries()).map(([catcode, value]) => ({
+        name: this.getCategoryNameFromCode(catcode),
         value,
       }));
 
@@ -89,16 +102,21 @@ export class PieChartGraphComponent {
       this.cdr.detectChanges(); // trigger render
     } else {
       const subMap = new Map<string, number>();
+
       for (const tx of this.transactions) {
-        if (tx.category !== this.currentCategory || tx.direction !== 'd') continue;
-        const sub = tx.subcategory?.trim() || 'Other';
-        subMap.set(sub, (subMap.get(sub) || 0) + tx.amount);
+        const categoryName = this.getCategoryNameFromCode(tx.category);
+        if (categoryName !== this.currentCategory || tx.direction !== 'd') continue;
+
+        const subCatCode = tx.subcategory?.trim();
+        const key = subCatCode || tx.category; // Ako nema podkategorije, koristi kategoriju
+        subMap.set(key, (subMap.get(key) || 0) + tx.amount);
       }
 
-      const data = Array.from(subMap.entries()).map(([name, value]) => ({
-        name,
-        value,
-      }));
+      const data = Array.from(subMap.entries()).map(([code, value]) => {
+        const match = this.categories.find(c => c.code === code);
+        const label = match?.name || 'Other';
+        return { name: label, value };
+      });
 
       this.chartOptions = {
         tooltip: {
@@ -106,7 +124,7 @@ export class PieChartGraphComponent {
           formatter: '{b}: {c} ({d}%)',
         },
         title: {
-          text: this.currentCategory,
+          text: this.getCategoryNameFromCode(this.currentCategory),
           left: 'center',
           top: 10,
           textStyle: {
@@ -155,8 +173,8 @@ export class PieChartGraphComponent {
           },
         ],
       };
-
       this.cdr.detectChanges(); 
     }
+    
   }
 }

@@ -25,7 +25,6 @@
       } @else {
         <a
           class="sidebar-item"
-          (click)="item.action && item.action(); isMobile && toggleSidebar()"
         >
           <mat-icon>{{ item.icon }}</mat-icon>
           @if (isExpanded || isMobile) {

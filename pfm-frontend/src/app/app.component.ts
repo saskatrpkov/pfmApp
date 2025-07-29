@@ -29,17 +29,14 @@ export class AppComponent {
 
   menuItems = [
     { icon: 'home', label: 'Home', route: '/' },
-    { icon: 'account_balance_wallet', label: 'My Accounts', route: '/accounts' },
-    { icon: 'payments', label: 'Payments', route: '/payments' },
-    { icon: 'credit_card',
-      label: 'Cards',
-      route: null, 
-      action: () => this.toggleCardsInCharts() },
-    { icon: 'currency_exchange', label: 'Currency Exchange', route: '/exchange' },
-    { icon: 'description', label: 'Product Catalogue', route: '/catalogue' },
+    { icon: 'account_balance_wallet', label: 'My Accounts' },
+    { icon: 'payments', label: 'Payments' },
+    { icon: 'credit_card',label: 'Cards'},
+    { icon: 'currency_exchange', label: 'Currency Exchange'},
+    { icon: 'description', label: 'Product Catalogue' },
     { icon: 'insights', label: 'PFM', route: '/transactions' },
-    { icon: 'settings', label: 'Self Care', route: '/settings' },
-    { icon: 'support_agent', label: 'Support', route: '/support' },
+    { icon: 'settings', label: 'Self Care' },
+    { icon: 'support_agent', label: 'Support'},
   ];
 
   constructor(private chartsService: ChartService) {}

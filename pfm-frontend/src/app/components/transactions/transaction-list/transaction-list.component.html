@@ -42,7 +42,7 @@
         <div class="chart-column">
           <app-charts-overview
             [categories]="transactionsCategories"
-            [transactions]="filteredTransactions"
+            [transactions]="isSearchMode ? filteredTransactions : transactions"
             @fadeSlide>
           </app-charts-overview>
         </div>
@@ -132,7 +132,9 @@
       </mat-slide-toggle>
 
       <div class="search-filter-wrapper">
-        <input type="text" placeholder="Search..." class="search-field"/>
+        <input type="text" placeholder="Search..." class="search-field" 
+        [(ngModel)]="searchText"
+        (input)="onSearchChange()"/>
         <button mat-stroked-button class="filter-btn" (click)="toggleKindFilter()">
           <mat-icon>filter_alt</mat-icon>
           <span class="fil">Filters</span>

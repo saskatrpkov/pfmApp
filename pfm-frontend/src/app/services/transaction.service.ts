@@ -12,30 +12,6 @@ export class TransactionService {
 
   constructor(private http:HttpClient) { }
 
-  // getTransactions(): Observable<Transaction[]> {
-  //   return this.http.get<any[]>('http://localhost:3000/transactions').pipe(
-  //     map((data) =>
-  //       data.map((item) => {
-  //         const transaction: Transaction = {
-  //           id: item.id,
-  //           beneficiaryName: item['beneficiary-name'] || item.beneficiaryName,
-  //           date: new Date(item.date).toISOString(), 
-  //           direction: item.direction,
-  //           amount: typeof item.amount === 'string'
-  //             ? parseFloat(item.amount.replace(/,/g, ''))
-  //             : item.amount,
-  //           currency: item.currency,
-  //           kind: item.kind,
-  //           isSplit: item['isSplit'] ?? false,
-  //           splits: item.splits ?? [], 
-  //           category: item.category ?? '',
-  //           subcategory: item.subcategory ?? '',
-  //           selected: false
-  //         };
-  //         return transaction;
-  //       })
-  //     )
-  //   );
     getTransactions(params?: {
       pageNumber?: number;
       pageSize?: number;
@@ -51,6 +27,7 @@ export class TransactionService {
     if (params?.kinds?.length) queryParams['transaction-kind'] = params.kinds;
     if (params?.startDate) queryParams['start-date'] = params.startDate;
     if (params?.endDate) queryParams['end-date'] = params.endDate;
+    
     return this.http.get<any>(`${this.baseUrl}/transactions`, { params: queryParams }).pipe(
       map((data) => ({
         items: data.items.map((item: any) => ({
@@ -75,18 +52,6 @@ export class TransactionService {
     );
   }
 
-
-
-  // updateTransactionCategory(id: string, update: { category: string; subcategory?: string }): Observable<any> {
-  //   return this.http.patch(`http://localhost:3000/transactions/${id}`, update);
-  // }
-  
-  // splitTransactionApiStyle(transactionId: string, splits: { catcode: string; amount: number }[]): Observable<any> {
-  //   return this.http.patch(`http://localhost:3000/transactions/${transactionId}`, {
-  //     isSplit: true,
-  //     splits: splits
-  //   });
-  // }
 
   updateTransactionCategory(id: string, update: { catcode: string }): Observable<any> {
     return this.http.post(`${this.baseUrl}/transactions/${id}/categorize`, {

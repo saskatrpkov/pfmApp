@@ -965,8 +965,10 @@
     min-width: 0px !important;
   }
   }
-}
-.clickable {
-  cursor: pointer;
-  text-decoration: underline;
+  .clickable {
+    cursor: pointer;
+      &:hover {
+      color: $primary-color;
+    }
+  }
 }
