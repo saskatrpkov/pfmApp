@@ -1,10 +1,12 @@
 <div class="charts-layout">
   <div class="chart-column">
+
     <!-- Prikaz dugmeta za izbor grafikona samo ako nije mobilni prikaz -->
     @if (!isMobile) {
       <div class="chart-top-controls">
         <mat-select
           [(value)]="selectedChart"
+          (valueChange)="onChartChange()"
           disableRipple
           panelClass="chart-type-panel"
           class="chart-type-button"
@@ -23,12 +25,11 @@
           @if (hasDataToDisplay) {
             <app-treemap-graph
               [categories]="categories"
-              [refreshTrigger]="refreshCount"
+              [refreshTrigger]="refreshTrigger"
               [startDate]="pendingFromDate"
               [endDate]="pendingToDate"
               [direction]="selectedDirection">
             </app-treemap-graph>
-
           } @else {
             <div class="empty-state">
               <img src="../../../../assets/group2.png" alt="No data" />
@@ -40,10 +41,14 @@
 
         @case ('pie') {
           @if (hasDataToDisplay) {
-            <app-pie-chart-graph echarts class="pie-chart" 
-            [categories]="categories" 
-            [transactions]="transactions" 
-            [refreshTrigger]="refreshTrigger"/>
+            <app-pie-chart-graph 
+              class="pie-chart"
+              [categories]="categories"
+              [refreshTrigger]="refreshTrigger"
+              [startDate]="pendingFromDate"
+              [endDate]="pendingToDate"
+              [direction]="selectedDirection">
+            </app-pie-chart-graph>
           } @else {
             <div class="empty-state">
               <img src="../../../../assets/group2.png" alt="No data" />
@@ -51,10 +56,6 @@
               <p>Try selecting a different date range or categorize your transactions.</p>
             </div>
           }
-        }
-
-        @case ('bar') {
-          <p>Bar chart will be implemented soon.</p>
         }
       }
     </div>

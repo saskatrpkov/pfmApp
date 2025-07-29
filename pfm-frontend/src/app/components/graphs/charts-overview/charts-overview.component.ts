@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild,
+  OnChanges,
+  SimpleChanges
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -25,26 +33,25 @@ import { BreakpointObserver, Breakpoints, LayoutModule } from '@angular/cdk/layo
   templateUrl: './charts-overview.component.html',
   styleUrl: './charts-overview.component.scss'
 })
-export class ChartsOverviewComponent {
+export class ChartsOverviewComponent implements OnChanges {
   @Input() transactions: Transaction[] = [];
-  @ViewChild(TreemapGraphComponent) treemapComponent?: TreemapGraphComponent;
-  @ViewChild(PieChartGraphComponent) pieChartComponent?: PieChartGraphComponent;
-  @Input() categories: { code: string; name: string; parentCode?: string |null }[] = [];
+  @Input() categories: { code: string; name: string; parentCode?: string | null }[] = [];
   @Input() selectedCategoryCode?: string;
   @Input() pendingFromDate?: string;
   @Input() pendingToDate?: string;
-  @Input() selectedDirection: 'c' | 'd' = 'd'; // defaultno troši
-  @Input() refreshCount: number = 0;
-  
+  @Input() selectedDirection: 'c' | 'd' = 'd';
+  @Input() refreshTrigger: number = 0;
+
+  @ViewChild(TreemapGraphComponent) treemapComponent?: TreemapGraphComponent;
+  @ViewChild(PieChartGraphComponent) pieChartComponent?: PieChartGraphComponent;
+
   showCards = false;
-  selectedChart: string = 'treemap'; // default
+  selectedChart: string = 'treemap';
   isMobile: boolean = false;
-  refreshTrigger: number = 0;
-  
+
   chartTypes = [
     { value: 'treemap', label: 'Treemap' },
     { value: 'pie', label: 'Pie Chart' },
-    { value: 'bar', label: 'Bar Chart' }
   ];
 
   constructor(
@@ -53,14 +60,7 @@ export class ChartsOverviewComponent {
   ) {
     this.chartsService.showCards$.subscribe(value => {
       this.showCards = value;
-
-      setTimeout(() => {
-        if (this.selectedChart === 'treemap') {
-          this.treemapComponent?.echartsInstance?.resize();
-        } else if (this.selectedChart === 'pie') {
-          this.pieChartComponent?.echartsInstance?.resize();
-        }
-      }, 100);
+      this.forceRefreshChart();
     });
 
     this.breakpointObserver.observe([Breakpoints.Handset])
@@ -70,6 +70,24 @@ export class ChartsOverviewComponent {
           this.selectedChart = 'pie';
         }
       });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['refreshTrigger']) {
+      this.forceRefreshChart();
+    }
+  }
+
+  private forceRefreshChart(): void {
+    setTimeout(() => {
+      if (this.selectedChart === 'treemap') {
+        this.treemapComponent?.fetchAnalytics();
+        this.treemapComponent?.echartsInstance?.resize();
+      } else if (this.selectedChart === 'pie') {
+        this.pieChartComponent?.loadData();
+        this.pieChartComponent?.echartsInstance?.resize();
+      }
+    }, 100);
   }
 
   onChartChange(): void {

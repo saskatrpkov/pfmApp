@@ -45,6 +45,7 @@
             [transactions]="isSearchMode ? filteredTransactions : transactions"
             [pendingFromDate]="pendingFromDate ? pendingFromDate.toISOString().split('T')[0] : undefined"
             [pendingToDate]="pendingToDate ? pendingToDate.toISOString().split('T')[0] : undefined"
+            [refreshTrigger]="refreshTrigger"
             @fadeSlide>
           </app-charts-overview>
         </div>

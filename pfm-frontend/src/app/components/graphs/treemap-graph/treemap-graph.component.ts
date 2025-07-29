@@ -44,7 +44,7 @@ export class TreemapGraphComponent implements OnChanges {
     this.echartsInstance = instance;
   }
 
-  private fetchAnalytics(): void {
+  public fetchAnalytics(): void {
     this.analyticsService.getAnalytics({
       startDate: this.startDate,
       endDate: this.endDate,

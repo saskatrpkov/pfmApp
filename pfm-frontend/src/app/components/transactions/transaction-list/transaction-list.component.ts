@@ -83,7 +83,7 @@ export class TransactionListComponent implements OnInit {
 
   searchText: string = '';
   isSearchMode: boolean = false;
-
+  refreshTrigger: number = 0;
   cards = [
     {
       id: 1,
@@ -113,15 +113,7 @@ export class TransactionListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // this.transactionService.getTransactions().subscribe((data) => {
-    //   this.transactions = data.map(t => ({ ...t, selected: false }));
-    //   this.kinds = [...new Set(this.transactions.map(t => t.kind))];
 
-    //   this.pendingKind = this.selectedKind;
-    //   this.pendingFromDate = this.fromDate;
-    //   this.pendingToDate = this.toDate;
-    //   this.applyAllFilters();
-    // });
     this.kinds = [
       'dep', 'wdw', 'pmt', 'fee', 'inc',
       'rev', 'adj', 'lnd', 'lnr',
@@ -131,8 +123,6 @@ export class TransactionListComponent implements OnInit {
     
     this.categoryService.getCategories().subscribe((categories) => {
       this.transactionsCategories = categories;
-
-      // sad kad su kategorije sigurno stigle, učitaj transakcije
       this.fetchTransactions();
     });
 
@@ -274,7 +264,7 @@ export class TransactionListComponent implements OnInit {
         transaction.subcategory = catcode;
         this.transactionService.updateTransactionCategory(transaction.id, { catcode }).subscribe();
         if (this.chartsOverview) {
-          this.chartsOverview.refreshTrigger++;
+          this.refreshTrigger++;
         }
       }
     });
@@ -315,7 +305,7 @@ export class TransactionListComponent implements OnInit {
 
           this.isMultiSelectMode = false;
           if (this.chartsOverview) {
-            this.chartsOverview.refreshTrigger++;
+            this.refreshTrigger++;
           }
         });
       }
@@ -383,7 +373,7 @@ export class TransactionListComponent implements OnInit {
         this.refreshTransactions();
         this.expandedTransactionId = transactionId; 
         if (this.chartsOverview) {
-          this.chartsOverview.refreshTrigger++;
+          this.refreshTrigger++;
         }
 
         setTimeout(() => {
