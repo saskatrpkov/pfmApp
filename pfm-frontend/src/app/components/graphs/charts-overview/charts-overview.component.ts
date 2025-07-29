@@ -30,6 +30,12 @@ export class ChartsOverviewComponent {
   @ViewChild(TreemapGraphComponent) treemapComponent?: TreemapGraphComponent;
   @ViewChild(PieChartGraphComponent) pieChartComponent?: PieChartGraphComponent;
   @Input() categories: { code: string; name: string; parentCode?: string |null }[] = [];
+  @Input() selectedCategoryCode?: string;
+  @Input() pendingFromDate?: string;
+  @Input() pendingToDate?: string;
+  @Input() selectedDirection: 'c' | 'd' = 'd'; // defaultno troši
+  @Input() refreshCount: number = 0;
+  
   showCards = false;
   selectedChart: string = 'treemap'; // default
   isMobile: boolean = false;

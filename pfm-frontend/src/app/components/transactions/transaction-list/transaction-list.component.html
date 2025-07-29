@@ -43,6 +43,8 @@
           <app-charts-overview
             [categories]="transactionsCategories"
             [transactions]="isSearchMode ? filteredTransactions : transactions"
+            [pendingFromDate]="pendingFromDate ? pendingFromDate.toISOString().split('T')[0] : undefined"
+            [pendingToDate]="pendingToDate ? pendingToDate.toISOString().split('T')[0] : undefined"
             @fadeSlide>
           </app-charts-overview>
         </div>

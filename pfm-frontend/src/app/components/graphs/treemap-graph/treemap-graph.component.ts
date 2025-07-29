@@ -1,27 +1,26 @@
-import { Component, Input, SimpleChanges } from '@angular/core';
-import { NgxEchartsModule } from 'ngx-echarts';
-import { Transaction } from '../../../models/transaction';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { EChartsOption } from 'echarts/types/dist/shared';
-import { groupBy, sumBy } from 'lodash';
 import type { ECharts } from 'echarts/core';
+import { NgxEchartsModule } from 'ngx-echarts';
+import { CommonModule } from '@angular/common';
+import { SpendingAnalyticsService, SpendingAnalyticsGroup } from '../../../services/spending-analytics.service';
 
 @Component({
   selector: 'app-treemap-graph',
-  imports: [NgxEchartsModule],
+  standalone: true,
+  imports: [NgxEchartsModule, CommonModule],
   templateUrl: './treemap-graph.component.html',
-  styleUrl: './treemap-graph.component.scss',
-  standalone: true
+  styleUrls: ['./treemap-graph.component.scss'],
 })
-export class TreemapGraphComponent {
-  @Input() transactions: Transaction[] = [];
+export class TreemapGraphComponent implements OnChanges {
   @Input() categories: { code: string; name: string; parentCode?: string | null }[] = [];
+  @Input() startDate?: string;
+  @Input() endDate?: string;
+  @Input() direction?: 'c' | 'd';
   @Input() refreshTrigger: number = 0;
 
   chartOptions: EChartsOption = {};
   public echartsInstance?: ECharts;
-
-  private latestTransactions: Transaction[] = [];
-  private latestCategories: { code: string; name: string; parentCode?: string | null }[] = [];
 
   private baseColors: string[] = [
     '#3D58ED', '#9B51E0', '#F299CA', '#2F80ED', '#56CCF2', '#EB5757',
@@ -30,153 +29,123 @@ export class TreemapGraphComponent {
     '#F1948A', '#A569BD',
   ];
 
+  constructor(private analyticsService: SpendingAnalyticsService) {}
+
   ngOnChanges(changes: SimpleChanges): void {
-  if (changes['transactions'] || changes['categories'] || changes['refreshTrigger']) {
-    if (this.transactions?.length && this.categories?.length) {
-      this.latestTransactions = this.transactions;
-      this.latestCategories = this.categories;
-      this.tryRenderChart();
+    if (
+      changes['startDate'] || changes['endDate'] ||
+      changes['direction'] || changes['refreshTrigger']
+    ) {
+      this.fetchAnalytics();
     }
   }
-}
 
   onChartInit(instance: ECharts): void {
     this.echartsInstance = instance;
-    this.tryRenderChart();
   }
 
-  private tryRenderChart(): void {
-    if (
-      this.echartsInstance &&
-      this.latestTransactions?.length &&
-      this.latestCategories?.length
-    ) {
-      this.updateChart(this.latestTransactions);
-    }
-  }
+  private fetchAnalytics(): void {
+    this.analyticsService.getAnalytics({
+      startDate: this.startDate,
+      endDate: this.endDate,
+      direction: this.direction
+    }).subscribe((groups) => {
+      const parentMap = new Map<string, SpendingAnalyticsGroup[]>();
 
-  getCategoryName(code: string): string {
-    const category = this.categories.find(c => c.code === code);
+      // Grupisanje po parent kategorijama
+      for (const group of groups) {
+        const category = this.categories.find(c => c.code === group.catcode);
+        const parentCode = category?.parentCode ?? group.catcode;
 
-    if (!category) return code;
+        if (!parentMap.has(parentCode!)) {
+          parentMap.set(parentCode!, []);
+        }
+        parentMap.get(parentCode!)!.push(group);
+      }
 
-    if (category.parentCode) {
-      const parent = this.categories.find(c => c.code === category.parentCode && !c.parentCode);
-      return parent?.name ?? category.name;
-    }
+      const data = Array.from(parentMap.entries()).map(([parentCode, childrenGroups], index) => {
+        const baseColor = this.baseColors[index % this.baseColors.length];
 
-    return category.name;
-  }
-
-  getSubcategoryName(code: string): string {
-    const category = this.categories.find(c => c.code === code);
-    return category?.name ?? code;
-  }
-
-  updateChart(transactions: Transaction[]): void {
-    const filtered = transactions.filter(t => t.category && t.category.trim() !== '');
-
-    const enriched = filtered.map(t => {
-      const hasSub = t.subcategory && t.subcategory.trim() !== '';
-      const catCode = t.category;
-
-      const categoryObj = this.categories.find(c => c.code === catCode);
-      const mainCategoryCode = categoryObj?.parentCode ?? catCode;
-
-      return {
-        ...t,
-        subcategory: hasSub ? t.subcategory : t.category,
-        mainCategoryCode
-      };
-    });
-
-
-    const groupedByCategory = groupBy(enriched, 'mainCategoryCode');
-
-    const data = Object.entries(groupedByCategory).map(([category, txns], index) => {
-      const baseColor = this.baseColors[index % this.baseColors.length];
-
-      const groupedBySub = groupBy(txns, 'subcategory');
-      const children = Object.entries(groupedBySub).map(([sub, subTxns], subIndex) => ({
-        name: this.getSubcategoryName(sub),
-        value: sumBy(subTxns, 'amount'),
-        itemStyle: {
-          color: this.shadeColor(baseColor, 20 + subIndex * 8),
-        },
-      }));
-
-      return {
-        name: this.getCategoryName(category),
-        value: sumBy(txns, 'amount'),
-        children,
-        itemStyle: {
-          color: baseColor,
-        },
-      };
-    });
-
-    this.chartOptions = {
-      tooltip: {
-        formatter: (info: any) => `${info.name}: ${info.value.toFixed(2)} RSD`,
-      },
-      series: [
-        {
-          type: 'treemap',
-          data,
-          leafDepth: 1,
-          roam: false,
-          visibleMin: 0,
-          label: {
-            show: true,
-            formatter: (params: any) => `${params.name}\n${params.value.toFixed(2)} RSD`,
-            position: 'inside',
-            color: '#fff',
-            fontSize: 12,
+        const parentLabel = this.getCategoryName(parentCode);
+        const children = childrenGroups.map((group, i) => ({
+          name: this.getSubcategoryName(group.catcode!),
+          value: group.amount,
+          itemStyle: {
+            color: this.shadeColor(baseColor, 20 + i * 8),
           },
-          labelLayout: { hideOverlap: false },
-          breadcrumb: {
-            show: true,
-            top: 0,
-            itemStyle: {
-              color: '#3D58ED',
-              borderColor: '#3D58ED',
-              borderWidth: 1,
+        }));
+
+        const totalAmount = children.reduce((acc, c) => acc + c.value, 0);
+
+        return {
+          name: parentLabel,
+          value: totalAmount,
+          children,
+          itemStyle: {
+            color: baseColor,
+          },
+        };
+      });
+
+      this.chartOptions = {
+        tooltip: {
+          formatter: (info: any) => `${info.name}: ${info.value.toFixed(2)} RSD`,
+        },
+        series: [
+          {
+            type: 'treemap',
+            data,
+            leafDepth: 1,
+            roam: false,
+            label: {
+              show: true,
+              formatter: (params: any) => `${params.name}\n${params.value.toFixed(2)} RSD`,
+              position: 'inside',
+              color: '#fff',
+              fontSize: 12,
             },
-            emphasis: {
+            labelLayout: { hideOverlap: false },
+            breadcrumb: {
+              show: true,
+              top: 0,
               itemStyle: {
                 color: '#3D58ED',
                 borderColor: '#3D58ED',
               },
             },
+            nodeClick: 'zoomToNode',
+            animation: false,
+            levels: [
+              {
+                itemStyle: {
+                  borderColor: '#1a1a1a',
+                  borderWidth: 2,
+                  gapWidth: 3,
+                },
+              },
+              {
+                itemStyle: {
+                  gapWidth: 2,
+                  borderColorSaturation: 0.6,
+                },
+              },
+            ],
           },
-          nodeClick: 'zoomToNode',
-          animation: false,
-          animationDuration: 0,
-          animationDurationUpdate: 0,
-          animationEasing: 'linear',
-          animationEasingUpdate: 'linear',
-          levels: [
-            {
-              itemStyle: {
-                borderColor: '#1a1a1a',
-                borderWidth: 2,
-                gapWidth: 3,
-              },
-            },
-            {
-              itemStyle: {
-                gapWidth: 2,
-                borderColorSaturation: 0.6,
-              },
-            },
-          ],
-        },
-      ],
-    };
+        ],
+      };
 
-    if (this.echartsInstance) {
-      this.echartsInstance.setOption(this.chartOptions, true);
-    }
+      if (this.echartsInstance) {
+        this.echartsInstance.setOption(this.chartOptions, true);
+      }
+    });
+  }
+
+  private getCategoryName(code: string): string {
+    return this.categories.find(c => c.code === code && !c.parentCode)?.name ?? code;
+  }
+
+  private getSubcategoryName(code: string): string {
+    return this.categories.find(c => c.code === code)?.name ?? code;
   }
 
   private shadeColor(hex: string, percent: number): string {
