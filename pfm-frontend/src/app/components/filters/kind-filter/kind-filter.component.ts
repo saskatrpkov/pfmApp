@@ -13,8 +13,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
   encapsulation: ViewEncapsulation.None
 })
 export class KindFilterComponent {
-  @Input() kinds: string[] = []; // 'pmt', 'wdw', ...
-  @Input() selectedKind: string = 'All'; // two-way binding iz roditelja
+  @Input() kinds: string[] = []; 
+  @Input() selectedKind: string = 'All'; 
   @Output() selectedKindChange = new EventEmitter<string>();
 
   kindLabels: { [key: string]: string } = {

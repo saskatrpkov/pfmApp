@@ -8,7 +8,6 @@ import { Transaction } from '../models/transaction';
 })
 export class TransactionService {
   private baseUrl = 'https://localhost:7138';
- 
 
   constructor(private http:HttpClient) { }
 
@@ -40,8 +39,7 @@ export class TransactionService {
             : item.amount,
           currency: item.currency,
           kind: item.kind,
-          isSplit: Array.isArray(item.splits) && item.splits.length > 0, // ✅ ovde je ključ
-          //isSplit: item.isSplit ?? false,
+          isSplit: Array.isArray(item.splits) && item.splits.length > 0, 
           splits: item.splits ?? [],
           category: item['cat-code'] ?? '',
           subcategory: item['cat-code'] ?? '',

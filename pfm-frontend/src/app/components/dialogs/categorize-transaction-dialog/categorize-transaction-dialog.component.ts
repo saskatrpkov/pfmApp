@@ -52,11 +52,9 @@ export class CategorizeTransactionDialogComponent implements OnInit {
     }
 
     if (selected.parentCode === null) {
-      // Glavna kategorija
       this.selectedCategory = selected;
       this.selectedSubcategory = null;
     } else {
-      // Podkategorija
       this.selectedSubcategory = selected;
       this.selectedCategory = this.allCategories.find(c => c.code === selected.parentCode) || null;
     }
@@ -71,8 +69,6 @@ export class CategorizeTransactionDialogComponent implements OnInit {
       this.subcategories = this.allCategories.filter(
         c => c.parentCode === this.selectedCategory!.code
       );
-
-      // Resetuj ako prethodno selektovana podkategorija više ne postoji
       if (!this.subcategories.find(sc => sc.code === this.selectedSubcategory?.code)) {
         this.selectedSubcategory = null;
       }

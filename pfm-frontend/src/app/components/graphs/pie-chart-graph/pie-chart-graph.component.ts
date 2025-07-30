@@ -45,11 +45,8 @@ export class PieChartGraphComponent {
 
     ec.on('legendselectchanged', (params: any) => {
       if (params.name) {
-        // Pronađi kategoriju po imenu
         const selectedCat = this.categories.find(c => c.name === params.name && !c.parentCode);
-        
-        // Ako kliknemo na istu kategoriju koja je već aktivna, ne radimo ništa
-        if (selectedCat && selectedCat.code !== this.currentCategory) {
+          if (selectedCat && selectedCat.code !== this.currentCategory) {
           this.currentCategory = selectedCat.code;
           this.loadData();
         }
@@ -77,24 +74,19 @@ export class PieChartGraphComponent {
         direction: this.direction,
       })
       .subscribe((groups) => {
-        // Filtriraj grupe bez catcode
         const validGroups = groups.filter(g => g.catcode !== null);
 
         if (!this.currentCategory) {
-          // ROOT NIVO: Agregiraj sve podkategorije pod njihove root kategorije
           const rootMap = new Map<string, number>();
 
           validGroups.forEach(group => {
             const category = this.categories.find(c => c.code === group.catcode);
             if (category) {
-              // Ako kategorija ima parentCode, dodaj iznos root kategoriji
-              // Ako nema parentCode, to je root kategorija
               const rootCode = category.parentCode || category.code;
               rootMap.set(rootCode, (rootMap.get(rootCode) || 0) + group.amount);
             }
           });
 
-          // Prikaži samo root kategorije sa agregiranim iznosima
           const data = Array.from(rootMap.entries())
             .map(([code, amount]) => {
               const category = this.categories.find(c => c.code === code && !c.parentCode);
@@ -104,7 +96,7 @@ export class PieChartGraphComponent {
               };
             })
             .filter(item => item.value > 0)
-            .sort((a, b) => b.value - a.value); // Sortiraj po veličini
+            .sort((a, b) => b.value - a.value); 
 
           this.chartOptions = {
             tooltip: {
@@ -143,7 +135,6 @@ export class PieChartGraphComponent {
             graphic: [],
           };
         } else {
-          // DRILL-DOWN NIVO: Prikaži samo podkategorije za kliknutu kategoriju
           const subcategories = this.categories.filter(c => c.parentCode === this.currentCategory);
           const data = subcategories
             .filter(cat => validGroups.some(g => g.catcode === cat.code))
@@ -155,7 +146,7 @@ export class PieChartGraphComponent {
               };
             })
             .filter(item => item.value > 0)
-            .sort((a, b) => b.value - a.value); // Sortiraj po veličini
+            .sort((a, b) => b.value - a.value); 
 
           this.chartOptions = {
             tooltip: {

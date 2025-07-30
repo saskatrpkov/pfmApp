@@ -132,11 +132,6 @@ export class TransactionListComponent implements OnInit {
     const kinds = this.selectedKind !== 'All' ? [this.selectedKind] : [];
     const startDateStr = this.fromDate?.toISOString().split('T')[0];
     const endDateStr = this.toDate?.toISOString().split('T')[0];
-    console.log('API filters:', {
-      kind: this.selectedKind,
-      from: this.fromDate,
-      to: this.toDate
-    });
     this.transactionService.getTransactions({
     pageNumber: this.currentPage,
     pageSize: this.transactionsPerPage,
@@ -148,7 +143,7 @@ export class TransactionListComponent implements OnInit {
       this.totalItemCount = res.totalCount;
 
       if (!this.isSearchMode) {
-        this.filteredTransactions = []; // clean up in case of old search
+        this.filteredTransactions = []; 
       }
    });
   }
@@ -160,26 +155,21 @@ export class TransactionListComponent implements OnInit {
   // -------------------------
   // FILTERI
   // -------------------------
-  // onKindSelected(kind: string): void {
-  //   this.currentPage = 1;
-  //   this.pendingKind = kind;
-  // }
 
     onSearchChange(): void {
-  const text = this.searchText.toLowerCase().trim();
-  this.isSearchMode = !!text;
+    const text = this.searchText.toLowerCase().trim();
+    this.isSearchMode = !!text;
 
-  if (this.isSearchMode) {
-    this.filteredTransactions = this.transactions.filter(t =>
-      t['beneficiaryName'].toLowerCase().includes(text)
-    );
-    this.totalItemCount = this.filteredTransactions.length;
-    this.currentPage = 1;
-  } else {
-    this.fetchTransactions(); // resetuj na backend + paginaciju
-  }
-}
-
+    if (this.isSearchMode) {
+        this.filteredTransactions = this.transactions.filter(t =>
+          t['beneficiaryName'].toLowerCase().includes(text)
+        );
+        this.totalItemCount = this.filteredTransactions.length;
+        this.currentPage = 1;
+      } else {
+        this.fetchTransactions(); 
+      }
+    }
 
 
   onDateRangeSelected(range: { from: Date | null; to: Date | null }): void {
@@ -197,26 +187,6 @@ export class TransactionListComponent implements OnInit {
     this.drawerOpened = false;
     this.filterDrawer.close();
   }
-
-  // private applyAllFilters(): void {
-  //   let result = [...this.transactions];
-
-  //   if (this.selectedKind !== 'All') {
-  //     result = result.filter(t => t.kind === this.selectedKind);
-  //   }
-
-  //   if (this.fromDate) {
-  //     result = result.filter(t => new Date(t.date) >= this.fromDate!);
-  //   }
-
-  //   if (this.toDate) {
-  //     result = result.filter(t => new Date(t.date) <= this.toDate!);
-  //   }
-
-  //   result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-  //   this.filteredTransactions = result;
-  // }
 
   applyFilters(): void {
     this.selectedKind = this.pendingKind;
@@ -403,24 +373,16 @@ export class TransactionListComponent implements OnInit {
       panelClass: 'dialog-container'
     });
   }
-  // refreshTransactions(): void {
-  //   this.transactionService.getTransactions().subscribe((data) => {
-  //     this.transactions = data.map(t => ({ ...t, selected: false }));
-  //     this.applyAllFilters();
-  //   });
-  // }
 
   // -------------------------
   // PAGINACIJA
   // -------------------------
   get paginatedTransactions(): Transaction[] {
     const start = (this.currentPage - 1) * this.transactionsPerPage;
-
     if (this.isSearchMode) {
       return this.filteredTransactions.slice(start, start + this.transactionsPerPage);
     }
-
-    return this.transactions; // backend je već poslao pravu stranicu
+    return this.transactions; 
   }
 
 
@@ -435,7 +397,7 @@ export class TransactionListComponent implements OnInit {
       this.currentPage = page;
 
       if (!this.isSearchMode) {
-        this.fetchTransactions(); // samo kada nisi u local-search režimu
+        this.fetchTransactions(); 
       }
     }
   }

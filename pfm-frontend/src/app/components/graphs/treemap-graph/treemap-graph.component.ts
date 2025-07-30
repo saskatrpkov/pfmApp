@@ -52,7 +52,6 @@ export class TreemapGraphComponent implements OnChanges {
     }).subscribe((groups) => {
       const parentMap = new Map<string, SpendingAnalyticsGroup[]>();
 
-      // Grupisanje po parent kategorijama
       for (const group of groups) {
         const category = this.categories.find(c => c.code === group.catcode);
         const parentCode = category?.parentCode ?? group.catcode;

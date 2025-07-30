@@ -62,20 +62,12 @@ export class CategorizeMultipleTransactionsDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  // onApply(): void {
-  //   this.dialogRef.close({
-  //     category: this.selectedCategory?.name || '',
-  //     subcategory: this.selectedSubcategory
-  //   });
-  // }
     onApply(): void {
       let catcode = '';
 
       if (this.selectedSubcategory) {
-        // Ako je izabrana podkategorija, nju šaljemo
         catcode = this.selectedSubcategory.code;
       } else if (this.selectedCategory) {
-        // Ako nije, šaljemo kategoriju
         catcode = this.selectedCategory.code;
       }
 

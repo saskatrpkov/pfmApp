@@ -82,7 +82,6 @@ export class SplitTransactionDialogComponent implements OnInit {
     split.filteredSubcategories = this.allCategories
       .filter((cat) => cat.parentCode === split.category?.code)
       .map((cat) => cat.name);
-
       split.subcategory = undefined;
   }
 
@@ -117,13 +116,12 @@ export class SplitTransactionDialogComponent implements OnInit {
       let selectedName: string;
 
       if (split.subcategory) {
-        // Ako je izabrana podkategorija, nju saljemo
         selectedName = split.subcategory;
       } else if (split.category?.name) {
-        // Ako nije, saljemo kategoriju
+
         selectedName = split.category.name;
       } else {
-        return null; // preskoci ako nista nije selektovano
+        return null; 
       }
 
       const selectedCode = this.allCategories.find((c) => c.name === selectedName)?.code;
